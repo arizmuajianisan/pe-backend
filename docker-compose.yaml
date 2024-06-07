@@ -9,6 +9,7 @@ services:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
+    restart: always
 
   maildev:
     build:
@@ -17,12 +18,13 @@ services:
     ports:
       - ${MAIL_CLIENT_PORT}:1080
       - ${MAIL_PORT}:1025
+    restart: always
 
   adminer:
     image: adminer
     restart: always
     ports:
-      - 8080:8080
+      - 6666:8080
 
   # Uncomment to use redis
   # redis:

@@ -22,7 +22,6 @@ import { JwtRefreshPayloadType } from './strategies/types/jwt-refresh-payload.ty
 import { JwtPayloadType } from './strategies/types/jwt-payload.type';
 import { UsersService } from '../users/users.service';
 import { AllConfigType } from '../config/config.type';
-import { MailService } from '../mail/mail.service';
 import { RoleEnum } from '../roles/roles.enum';
 import { Session } from '../session/domain/session';
 import { SessionService } from '../session/session.service';
@@ -35,7 +34,6 @@ export class AuthService {
     private jwtService: JwtService,
     private usersService: UsersService,
     private sessionService: SessionService,
-    private mailService: MailService,
     private configService: ConfigService<AllConfigType>,
   ) {}
 
@@ -194,35 +192,14 @@ export class AuthService {
   }
 
   async register(dto: AuthRegisterLoginDto): Promise<void> {
-    const user = await this.usersService.create({
+    await this.usersService.create({
       ...dto,
       email: dto.email,
       role: {
         id: RoleEnum.user,
       },
       status: {
-        id: StatusEnum.inactive,
-      },
-    });
-
-    const hash = await this.jwtService.signAsync(
-      {
-        confirmEmailUserId: user.id,
-      },
-      {
-        secret: this.configService.getOrThrow('auth.confirmEmailSecret', {
-          infer: true,
-        }),
-        expiresIn: this.configService.getOrThrow('auth.confirmEmailExpires', {
-          infer: true,
-        }),
-      },
-    );
-
-    await this.mailService.userSignUp({
-      to: dto.email,
-      data: {
-        hash,
+        id: StatusEnum.active,
       },
     });
   }
@@ -321,32 +298,6 @@ export class AuthService {
         },
       });
     }
-
-    const tokenExpiresIn = this.configService.getOrThrow('auth.forgotExpires', {
-      infer: true,
-    });
-
-    const tokenExpires = Date.now() + ms(tokenExpiresIn);
-
-    const hash = await this.jwtService.signAsync(
-      {
-        forgotUserId: user.id,
-      },
-      {
-        secret: this.configService.getOrThrow('auth.forgotSecret', {
-          infer: true,
-        }),
-        expiresIn: tokenExpiresIn,
-      },
-    );
-
-    await this.mailService.forgotPassword({
-      to: email,
-      data: {
-        hash,
-        tokenExpires,
-      },
-    });
   }
 
   async resetPassword(hash: string, password: string): Promise<void> {
@@ -460,28 +411,6 @@ export class AuthService {
           },
         });
       }
-
-      const hash = await this.jwtService.signAsync(
-        {
-          confirmEmailUserId: currentUser.id,
-          newEmail: userDto.email,
-        },
-        {
-          secret: this.configService.getOrThrow('auth.confirmEmailSecret', {
-            infer: true,
-          }),
-          expiresIn: this.configService.getOrThrow('auth.confirmEmailExpires', {
-            infer: true,
-          }),
-        },
-      );
-
-      await this.mailService.confirmNewEmail({
-        to: userDto.email,
-        data: {
-          hash,
-        },
-      });
     }
 
     delete userDto.email;

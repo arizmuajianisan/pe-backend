@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 import { RoleEnum } from '../../../../roles/roles.enum';
 import { StatusEnum } from '../../../../statuses/statuses.enum';
 import { UserEntity } from '../../../../users/infrastructure/persistence/relational/entities/user.entity';
-
+import { ADMIN_PASSWORD, TESTER_PASSWORD } from 'test/utils/constants';
 @Injectable()
 export class UserSeedService {
   constructor(
@@ -25,7 +25,7 @@ export class UserSeedService {
 
     if (!countAdmin) {
       const salt = await bcrypt.genSalt();
-      const password = await bcrypt.hash('secret', salt);
+      const password = await bcrypt.hash(ADMIN_PASSWORD, salt);
 
       await this.repository.save(
         this.repository.create({
@@ -55,7 +55,7 @@ export class UserSeedService {
 
     if (!countUser) {
       const salt = await bcrypt.genSalt();
-      const password = await bcrypt.hash('secret', salt);
+      const password = await bcrypt.hash(TESTER_PASSWORD, salt);
 
       await this.repository.save(
         this.repository.create({
